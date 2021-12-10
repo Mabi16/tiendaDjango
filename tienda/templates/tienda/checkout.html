@@ -1,0 +1,167 @@
+{% extends 'tienda/main.html' %}
+
+{% load static %}
+
+{% block content %}
+
+    <div class="row">
+
+        <div class="col-lg-6">
+            <div class="box-element">
+                <a href="{% url 'carrito'%}" class="btn btn-outline-dark">&#x2190; Regresar a Carrito</a>
+
+                <hr>
+                <h3>Resumen del pedido.</h3>
+                <hr>
+                {% for articulo in articulos %}
+                    <div class="cart-row">
+                        <div style="flex:2;"><img src="{{articulo.producto.imagenURL}}" alt="" class="row-image"></div>
+                        <div style="flex:2;"><p>{{articulo.producto.nombre}}</p></div>
+                        <div style="flex:1;"><p>${{articulo.producto.precio}}</p></div>
+                        <div style="flex:1;"><p>x{{articulo.cantidad}}</p></div>
+                    </div>
+                {% endfor %}
+                <h5>Articulos: {{pedido.get_articulos_carrito}}</h5>
+                <h5>Total: ${{pedido.get_total_carrito|floatformat:2}}</h5>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="box-element" id="form-wrapper">
+                <form id="form">
+                    <div id="user-info">
+                        <div class="form-field">
+                            <input required type="text" class="form-control" name="name" placeholder="Nombre...">
+                        </div>
+                        <div class="form-field">
+                            <input required type="email" class="form-control" name="email" placeholder="Correo...">
+                        </div>
+                    </div>
+
+                    <div id="shipping-info">
+                        <hr>
+                        <p>Informacion de envio:</p>
+                        <hr>
+                        <div class="form-field">
+                            <input type="text" class="form-control" name="address" placeholder="Direccion...">
+                        </div>
+                        <div class="form-field">
+                            <input type="text" class="form-control" name="city" placeholder="Ciudad...">
+                        </div>
+                        <div class="form-field">
+                            <input type="text" class="form-control" name="state" placeholder="Estado...">
+                        </div>
+                        <div class="form-field">
+                            <input type="text" class="form-control" name="zipcode" placeholder="Codigo Postal...">
+                        </div>
+                        <div class="form-field">
+                            <input type="text" class="form-control" name="country" placeholder="Pais...">
+                        </div>
+                    </div>
+
+                    <hr>
+                    <input id="form-button" class="btn btn-success btn-block w-100" type="submit" value="Continuar">
+                </form>
+            </div>
+            
+            <br>
+            
+            <div class="box-element hidden" id="payment-info">
+                <small>Confirmar Pedido</small>
+                <button id="make-payment" style="float:right;" class="btn btn-warning shadow"> Realizar Pago</button>
+            </div>
+        </div>
+
+        
+
+    </div>
+
+    <script>
+    
+        var envio = '{{pedido.envio}}'
+        var total = '{{pedido.get_total_carrito}}'
+
+        console.log(envio)
+        if (envio == 'False') {
+            document.getElementById('shipping-info').innerHTML=''
+        }
+
+        if (usuario != 'AnonymousUser'){
+            document.getElementById('user-info').innerHTML =''
+        }
+
+        if (envio == 'False' && usuario != 'AnonymousUser'){
+            // ocultar todo el form si hay sesion iniciada y envio es falso
+            document.getElementById('form-wrapper').classList.add("hidden")
+
+            // Mostrar pago si usuario quiere comprar un articulo que no requiere envio
+            document.getElementById('payment-info').classList.remove("hidden");
+        }
+
+        var form = document.getElementById('form')
+
+        form.addEventListener('submit', function(e){
+            e.preventDefault()
+            console.log('Form submitted...');
+            document.getElementById('form-button').classList.add('hidden')
+            document.getElementById('payment-info').classList.remove('hidden')
+        })
+
+        document.getElementById('make-payment').addEventListener('click', function(e){
+            submitFormData()
+        })
+
+        function submitFormData(){
+            console.log('Payment Button clicked')
+
+            var userFormData = {
+                'name':null,
+                'email':null,
+                'total':total
+            }
+
+            var shippingInfo = {
+                'address':null,
+                'city':null,
+                'state':null,
+                'zipcode':null,
+            }
+
+            if(envio != 'False'){
+                shippingInfo.address = form.address.value
+                shippingInfo.city = form.city.value
+                shippingInfo.state = form.state.value
+                shippingInfo.zipcode = form.zipcode.value
+            }
+
+            if(usuario == 'AnonymousUser'){
+                userFormData.name = form.name.value
+                userFormData.email = form.email.value
+            }
+
+            var url ='/procesar_pedido/'
+            fetch(url,{
+                method:'POST',
+                headers:{
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                },
+                body:JSON.stringify({
+                    'form':userFormData,
+                    'envio':shippingInfo
+                })
+            })
+            .then((response)=> response.json())
+            .then((data) =>{
+                console.log('Success:',data);
+                alert('Transaccion completada');
+                window.location.href = "{% url 'tienda' %}"
+            })
+
+        }
+        
+    </script>
+
+
+{% endblock content %}
+

@@ -1,0 +1,33 @@
+{% extends 'tienda/main.html' %}
+
+{% load static %}
+
+{% block content %}
+
+    <div class="row">
+
+        {% for producto in productos %}
+            <div class="col-lg-4">
+                
+                <img class="thumbnail" style="width:100%;height:auto; max-height:250px;" 
+                src="{{producto.imagenURL}}" alt="">
+                
+                <div class="box-element product ">
+                    <h6><strong>{{producto.nombre}}</strong></h6>
+                    <hr>
+
+                    <button data-producto="{{producto.id}}" data-action="add" 
+                    class="btn btn-outline-secondary add-btn update-cart">
+                        Agregar a carrito
+                    </button>
+                    
+                    <a href="#" class="btn btn-outline-success">Ver</a>
+                    <h4 style="display:inline-block;float:right;">
+                        {{ producto.precio|floatformat:2}}
+                    </h4>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+{% endblock content %}
